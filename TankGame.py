@@ -8,71 +8,39 @@ game_display = pygame.display.set_mode((display_width, display_height))
 clock = pygame.time.Clock()
 
 class Tank:
-	def __init__(self, x, y, width, height, color, is_enemy=False):
-		# TODO rename x and y to x_pos and y_pos of the tank
-		self.x = x
-		self.y = y
+	def __init__(self, pos_x, pos_y, width, height, color, is_enemy=False):
+		self.pos_x = pos_x
+		self.pos_y = pos_y
 		self.width = width
 		self.height = height
 		self.color = color
 		self.is_enemy = is_enemy
 
 	def draw(self, mouse_x=None, mouse_y=None):
-		rect_top_x = self.x + int(self.width/2)
-		rect_top_y = self.y + 5
+		rect_top_x = self.pos_x + int(self.width/2)
+		rect_top_y = self.pos_y + 5
 
-		pygame.draw.rect(game_display, self.color, [self.x, self.y, self.width, self.height])
+		pygame.draw.rect(game_display, self.color, [self.pos_x, self.pos_y, self.width, self.height])
 		pygame.draw.circle(game_display, self.color, [rect_top_x, rect_top_y], 30)
 
 		if self.is_enemy:
 			pygame.draw.line(game_display, self.color, [rect_top_x, rect_top_y], [rect_top_x - 50, rect_top_y - 50], 5)
 		else:
+			# if not enemy, make the cursor follow the mouse
 			x = mouse_x - rect_top_x
-			y = 600 - mouse_y - rect_top_y + 400
-			
-			print(rect_top_y)
+			y = display_height - mouse_y - (display_height - rect_top_y)
 
-			len_vektor = sqrt(x**2 + y**2)
-			enheds_vektor = [50*x/len_vektor, 50.0*y/len_vektor]
+			barrel_len = 50
+
+			mouse_vector_len = sqrt(x**2 + y**2)
+			barrel_unit_vector = [barrel_len * x/mouse_vector_len, 
+								  barrel_len * y/mouse_vector_len]
+
+			barrel_vector = [barrel_unit_vector[0] + rect_top_x,
+							(display_height - barrel_unit_vector[1]) - (display_height - rect_top_y)]
 
 			start_pos = [rect_top_x, rect_top_y]
-			end_pos = [enheds_vektor[0] + rect_top_x, 600 - enheds_vektor[1] - rect_top_y + 400]
-
-			pygame.draw.line(game_display, RED, start_pos, end_pos, 5)
-
-
-class Projectile:
-	def __init__(self, x, y, radius, color, mouse_x, mouse_y):
-		self.x = x
-		self.y = y
-		self.radius = radius
-		self.color = color
-		
-		self.delta_time = 1/60
-		self.mass = 50.0
-		self.g = 9.82
-
-		self.velocity_x = mouse_x
-		self.velocity_y = 600 - mouse_y 
-
-	def draw(self):
-		pygame.draw.circle(game_display, self.color, [self.x, self.y], self.radius)
-
-	def update(self):
-		self.x += int(self.velocity_x * self.delta_time)
-		self.y -= int(self.velocity_y * self.delta_time)
-
-		# velocity_x only gets affected by wind/friction
-		self.velocity_x -= 1
-		self.velocity_y -= (self.mass * self.g) * self.delta_time
-
-	def collided(self, obj):
-		# parentheses for easier reading
-		if (self.x + self.radius) >=  (obj.x) and (self.x - self.radius) <= (obj.x + obj.width):
-			if (self.y + self.radius) >= (obj.y) and (self.y - self.radius) <= (obj.y + obj.height):
-				return True
-		return False
-			
+			pygame.draw.line(game_display, RED, start_pos, barrel_vector, 5)
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -91,6 +59,41 @@ player_y = 500
 player_width = 100
 player_height = 50
 player = Tank(player_x, player_y, player_width, player_height, GREEN)
+
+player_top_x = player_x + int(player_width/2)
+player_top_y = player_y + 5
+
+class Projectile:
+	def __init__(self, x, y, radius, color, mouse_x, mouse_y):
+		self.x = x
+		self.y = y
+		self.radius = radius
+		self.color = color
+		
+		self.delta_time = 1/60
+		self.mass = 50.0
+		self.g = 9.82
+
+		self.velocity_x = mouse_x
+		self.velocity_y = display_height - mouse_y
+
+	def draw(self):
+		pygame.draw.circle(game_display, self.color, [self.x, self.y], self.radius)
+
+	def update(self):
+		self.x += int(self.velocity_x * self.delta_time)
+		self.y -= int(self.velocity_y * self.delta_time)
+
+		# velocity_x only gets affected by wind/friction
+		self.velocity_x -= 1
+		self.velocity_y -= (self.mass * self.g) * self.delta_time
+
+	def collided(self, obj):
+		# parentheses for easier reading
+		if (self.x + self.radius) >=  (obj.pos_x) and (self.x - self.radius) <= (obj.pos_x + obj.width):
+			if (self.y + self.radius) >= (obj.pos_y) and (self.y - self.radius) <= (obj.pos_y + obj.height):
+				return True
+		return False
 
 ball_x = 100
 ball_y = 500
@@ -127,7 +130,6 @@ while not game_exit:
 				arc_enabled = True
 
 		if event.type == pygame.MOUSEBUTTONDOWN:
-			
 			balls.append(Projectile(ball_x, ball_y, ball_radius, BLUE, mouse_x, mouse_y))
 
 	if arc_enabled:
@@ -135,7 +137,7 @@ while not game_exit:
 		pos_y = ball_y
 
 		velocity_x = mouse_x
-		velocity_y = 600 - mouse_y
+		velocity_y = display_height - mouse_y
 
 		for i in range(100):
 			pos_x += int(velocity_x * delta_time)
