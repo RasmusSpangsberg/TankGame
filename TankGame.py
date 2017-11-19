@@ -33,11 +33,11 @@ class Tank:
 			barrel_len = 50
 
 			mouse_vector_len = sqrt(x**2 + y**2)
-			barrel_unit_vector = [barrel_len * x/mouse_vector_len, 
-								  barrel_len * y/mouse_vector_len]
+			barrel_unit_vector = [x/mouse_vector_len, 
+								  y/mouse_vector_len]
 
-			barrel_vector = [barrel_unit_vector[0] + rect_top_x,
-							(display_height - barrel_unit_vector[1]) - (display_height - rect_top_y)]
+			barrel_vector = [barrel_unit_vector[0] * barrel_len + rect_top_x,
+							(display_height - barrel_unit_vector[1] * barrel_len) - (display_height - rect_top_y)]
 
 			start_pos = [rect_top_x, rect_top_y]
 			pygame.draw.line(game_display, RED, start_pos, barrel_vector, 5)
