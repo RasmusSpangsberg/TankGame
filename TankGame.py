@@ -65,8 +65,8 @@ player_top_y = player_y + 5
 
 class Projectile:
 	def __init__(self, x, y, radius, color, mouse_x, mouse_y):
-		self.x = x
-		self.y = y
+		self.pos_x = x
+		self.pos_y = y
 		self.radius = radius
 		self.color = color
 		
@@ -74,15 +74,15 @@ class Projectile:
 		self.mass = 50.0
 		self.g = 9.82
 
-		self.velocity_x = mouse_x
-		self.velocity_y = display_height - mouse_y
+		self.velocity_x = mouse_x - player_top_x
+		self.velocity_y = display_height - mouse_y - (display_height - player_top_y)
 
 	def draw(self):
-		pygame.draw.circle(game_display, self.color, [self.x, self.y], self.radius)
+		pygame.draw.circle(game_display, self.color, [self.pos_x, self.pos_y], self.radius)
 
 	def update(self):
-		self.x += int(self.velocity_x * self.delta_time)
-		self.y -= int(self.velocity_y * self.delta_time)
+		self.pos_x += int(self.velocity_x * self.delta_time)
+		self.pos_y -= int(self.velocity_y * self.delta_time)
 
 		# velocity_x only gets affected by wind/friction
 		self.velocity_x -= 1
@@ -90,8 +90,8 @@ class Projectile:
 
 	def collided(self, obj):
 		# parentheses for easier reading
-		if (self.x + self.radius) >=  (obj.pos_x) and (self.x - self.radius) <= (obj.pos_x + obj.width):
-			if (self.y + self.radius) >= (obj.pos_y) and (self.y - self.radius) <= (obj.pos_y + obj.height):
+		if (self.pos_x + self.radius) >=  (obj.pos_x) and (self.pos_x - self.radius) <= (obj.pos_x + obj.width):
+			if (self.pos_y + self.radius) >= (obj.pos_y) and (self.pos_y - self.radius) <= (obj.pos_y + obj.height):
 				return True
 		return False
 
@@ -136,8 +136,8 @@ while not game_exit:
 		pos_x = ball_x
 		pos_y = ball_y
 
-		velocity_x = mouse_x
-		velocity_y = display_height - mouse_y
+		velocity_x = mouse_x - player_top_x
+		velocity_y = (display_height - mouse_y) - (display_height - player_top_y)
 
 		for i in range(100):
 			pos_x += int(velocity_x * delta_time)
@@ -154,7 +154,7 @@ while not game_exit:
 		ball.update()
 		ball.draw()
 
-		if ball.y >= display_height + ball_radius:
+		if ball.pos_y >= display_height + ball_radius:
 			balls.remove(ball)
 			enemies_missed += 1
 
